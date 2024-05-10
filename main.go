@@ -60,6 +60,7 @@ type RoomData struct {
 	From struct {
 		Payload struct {
 			Name string `json:"name"`
+			Type int    `json:"type"`
 		} `json:"payload"`
 	} `json:"from"`
 }
@@ -138,7 +139,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			message.Source = string(data)
-			// fmt.Println("Source:", string(data))
+			fmt.Println("Source:", string(data))
 		case "isMentioned":
 			// 处理 "source" 部分的内容,该消息是@我的消息
 			data, err := ioutil.ReadAll(part)
@@ -190,10 +191,13 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			// 如果为空，则输出 from 中的 name 信息
 			fmt.Println("Room is empty.")
 			fmt.Println("Name:", data.From.Payload.Name)
-
-			response.Success = true
-			response.Data.Type = "text"
-			response.Data.Content = aurora(message.Content)
+			if data.From.Payload.Type == 1 {
+				response.Success = true
+				response.Data.Type = "text"
+				response.Data.Content = aurora(message.Content)
+			} else {
+				return
+			}
 		} else {
 			// 如果不为空，则输出 topic 的名称和 from 中的 name 信息
 			fmt.Println("Topic:", data.Room.Payload.Topic)
@@ -248,7 +252,7 @@ func aurora(str string) string {
 	}
 
 	// 发送 POST 请求
-	resp, err := http.Post("https://example.com/v1/chat/completions", "application/json", bytes.NewBuffer(requestDataBytes))
+	resp, err := http.Post("https://aurora.xncen.top/v1/chat/completions", "application/json", bytes.NewBuffer(requestDataBytes))
 	if err != nil {
 		panic(err)
 	}
